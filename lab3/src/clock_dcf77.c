@@ -350,6 +350,7 @@ static void DCF77_sample_fn(void *params)
             /* Negative edge (H -> L): a new second pulse begins.
              * T_pulse = time since the previous negative edge. */
             uint32_t t_pulse = current_time_ms - t_neg_edge;
+            
             t_neg_edge  = current_time_ms;
             t_low_start = current_time_ms;
 
@@ -366,12 +367,19 @@ static void DCF77_sample_fn(void *params)
              * T_low decides the bit value. */
             uint32_t t_low = current_time_ms - t_low_start;
 
-            if (t_low >= 40 && t_low < 140)
-                event = VALID_ZERO;        // ~100 ms = 0
-            else if (t_low >= 140 && t_low <= 350)
-                event = VALID_ONE;         // ~200 ms = 1
-            else
-                event = INVALID;
+            if (t_low >= 30 && t_low < 125) 
+            {
+                event = VALID_ZERO;        // ~100 ms = 0 (Löst die blaue LED aus)
+            } 
+            else if (t_low >= 125 && t_low <= 350) 
+            {
+                event = VALID_ONE;         // ~200 ms = 1 (Löst die grüne LED aus)
+            } 
+            else 
+            {
+                event = INVALID;           // Schrott-Pulse
+            }
+            printf("Pulsweite: %lu ms | Sekundenabstand: %lu ms\n", t_low, t_pulse);
         }
         
         // Zustand für den nächsten Durchlauf merken

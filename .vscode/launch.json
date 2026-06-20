@@ -1,0 +1,20 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Pico 2 Debug (RP2350)",
+            "cwd": "${workspaceRoot}",
+            "executable": "${command:cmake.launchTargetPath}",
+            "request": "launch",
+            "type": "cortex-debug",
+            "servertype": "openocd",
+            "device": "RP2350",
+            "configFiles": [
+                "interface/cmsis-dap.cfg", // Standard für Raspberry Pi Debug Probe / Picoprobe
+                "target/rp2350.cfg"        // <--- Geändert auf RP2350
+            ],
+            "svdFile": "${env:PICO_SDK_PATH}/src/rp2350/hardware_regs/rp2350.svd", // <--- Geändert auf RP2350
+            "runToEntryPoint": "main"
+        }
+    ]
+}

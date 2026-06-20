@@ -62,6 +62,7 @@ void control_fn(void *)
 int main()
 {
     int ret;
+    stdio_init_all();
     static TaskHandle_t handle_control;
 
     if (0 != (ret = DEV_Module_Init()))
