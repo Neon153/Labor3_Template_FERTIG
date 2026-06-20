@@ -1,0 +1,5 @@
+{
+    "cmake.configureSettings": {
+        "PICO_TOOLCHAIN_PATH": "${workspaceRoot}/../external/usr/bin"
+    }
+}
