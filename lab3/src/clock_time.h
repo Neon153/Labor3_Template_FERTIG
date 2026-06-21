@@ -59,4 +59,13 @@ void clock_time_change_minute_utc(int change_value);
 
 void clock_time_set_timezone(timezones_t tz);
 
+/* Time-zone toggle for the display (Req 2.2):
+ *  - clock_time_set_dst(): summer-time flag from the DCF77 frame (MESZ = true)
+ *  - clock_time_toggle_timezone(): switch the DISPLAYED time between
+ *    Middle European Time (= DCF77 time) and US Eastern (DCF77 time - 5 h)
+ *  - clock_time_get_tz_name(): "WET" (winter), "WEST" (summer) or "EST" */
+void clock_time_set_dst(bool summer);
+void clock_time_toggle_timezone(void);
+const char * clock_time_get_tz_name(void);
+
 #endif /* __CLOCK_TIME_H__ */

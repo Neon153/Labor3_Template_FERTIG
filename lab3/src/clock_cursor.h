@@ -55,4 +55,12 @@ bool clock_cursor_update(uint64_t tick_us);
  */
 void clock_cursor_get_state(pos_t * pos, bool * visible);
 
+/**
+ * Edge-detected joystick button: returns true exactly ONCE per physical press
+ * (debounced). Used to toggle the displayed time zone (Req 2.2).
+ *
+ * @return true on the press edge, false otherwise.
+ */
+bool clock_cursor_button_pressed(void);
+
 #endif /* __CLOCK_CURSOR_H__ */

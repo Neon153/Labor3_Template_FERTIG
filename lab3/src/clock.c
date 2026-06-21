@@ -47,6 +47,13 @@ void control_fn(void *)
         if (clock_cursor_update(tick_us))
             update_gui = true;
 
+        // Joystick button toggles the displayed time zone MEZ <-> US Eastern (Req 2.2)
+        if (clock_cursor_button_pressed())
+        {
+            clock_time_toggle_timezone();
+            update_gui = true;
+        }
+
         // Update the seconds, minutes and hours internally (DCF77 is separate)
         if (clock_time_inc_second(tick_us))
             update_gui = true;
@@ -62,7 +69,6 @@ void control_fn(void *)
 int main()
 {
     int ret;
-    stdio_init_all();
     static TaskHandle_t handle_control;
 
     if (0 != (ret = DEV_Module_Init()))
@@ -71,10 +77,6 @@ int main()
     /* Initialize the IMU before the GUI/tasks use it (Req 1.5). */
     clock_imu_init();
     clock_time_init();
-    
-    clock_time_set_from_dcf77(13, 0, 20, 6, 2026);  // 12:34, 20.06.2026
-    clock_time_set_weekday(6);
-    
     clock_gui_init();
     clock_dcf77_init();
     clock_cursor_init();

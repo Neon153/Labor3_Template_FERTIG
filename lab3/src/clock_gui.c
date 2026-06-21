@@ -53,12 +53,14 @@ static lv_obj_t *ui_Screen1Day = NULL;
 static lv_obj_t *ui_Screen1Month = NULL;
 static lv_obj_t *ui_Screen1Year = NULL;
 static lv_obj_t *ui_Screen1Weekday = NULL;   // weekday text (Req 2.1)
+static lv_obj_t *ui_Screen1Tz = NULL;        // time-zone abbreviation (Req 2.2)
 
 static lv_obj_t *ui_Screen2 = NULL;
 static lv_obj_t *ui_Screen2Day = NULL;
 static lv_obj_t *ui_Screen2Month = NULL;
 static lv_obj_t *ui_Screen2Year = NULL;
 static lv_obj_t *ui_Screen2Weekday = NULL;   // weekday text (Req 2.1)
+static lv_obj_t *ui_Screen2Tz = NULL;        // time-zone abbreviation (Req 2.2)
 static lv_obj_t *ui_Screen2_Hour = NULL;
 static lv_obj_t *ui_Screen2_Minute = NULL;
 static lv_obj_t *ui_Screen2_Seconds = NULL;
@@ -208,6 +210,9 @@ static void clock_gui_Screen1_init(void)
     /* Weekday in the upper half of the analog display (Req 2.1). Created last
      * so it stays on top of the clock hands. */
     ui_Screen1Weekday = clock_gui_weekday_init(ui_Screen1, 48);
+
+    /* Time-zone abbreviation in the lower part of the analog display (Req 2.2). */
+    ui_Screen1Tz = clock_gui_weekday_init(ui_Screen1, 188);
 }
 
 static void clock_gui_Screen2_init(void)
@@ -297,6 +302,9 @@ static void clock_gui_Screen2_init(void)
 
     /* Weekday below the date on the digital display (Req 2.1). */
     ui_Screen2Weekday = clock_gui_weekday_init(ui_Screen2, 180);
+
+    /* Time-zone abbreviation at the top of the digital display (Req 2.2). */
+    ui_Screen2Tz = clock_gui_weekday_init(ui_Screen2, 20);
 }
 
 
@@ -434,6 +442,11 @@ void clock_gui_update(uint64_t tick_us)
     const char * wd = (weekday >= 1 && weekday <= 7) ? weekday_strs[weekday - 1] : "---";
     lv_label_set_text(ui_Screen1Weekday, wd);
     lv_label_set_text(ui_Screen2Weekday, wd);
+
+    /* Time-zone abbreviation on both screens (Req 2.2): WET / WEST / EST. */
+    const char * tz = clock_time_get_tz_name();
+    lv_label_set_text(ui_Screen1Tz, tz);
+    lv_label_set_text(ui_Screen2Tz, tz);
 
     // Now draw the hands of the clock -- but only on Screen1
     if (screen_active == ui_Screen1)
