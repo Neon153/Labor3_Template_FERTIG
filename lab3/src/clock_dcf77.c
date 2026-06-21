@@ -367,11 +367,11 @@ static void DCF77_sample_fn(void *params)
              * T_low decides the bit value. */
             uint32_t t_low = current_time_ms - t_low_start;
 
-            if (t_low >= 30 && t_low < 125) 
+            if (t_low >= 30 && t_low < 120) 
             {
                 event = VALID_ZERO;        // ~100 ms = 0 (Löst die blaue LED aus)
             } 
-            else if (t_low >= 125 && t_low <= 350) 
+            else if (t_low >= 120 && t_low <= 350) 
             {
                 event = VALID_ONE;         // ~200 ms = 1 (Löst die grüne LED aus)
             } 
@@ -379,7 +379,7 @@ static void DCF77_sample_fn(void *params)
             {
                 event = INVALID;           // Schrott-Pulse
             }
-            printf("Pulsweite: %lu ms | Sekundenabstand: %lu ms\n", t_low, t_pulse);
+            //printf("Pulsweite: %lu ms | Sekundenabstand: %lu ms\n", t_low, t_pulse);
         }
         
         // Zustand für den nächsten Durchlauf merken
