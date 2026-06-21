@@ -52,11 +52,15 @@ static lv_obj_t *ui_Screen1 = NULL;
 static lv_obj_t *ui_Screen1Day = NULL;
 static lv_obj_t *ui_Screen1Month = NULL;
 static lv_obj_t *ui_Screen1Year = NULL;
+static lv_obj_t *ui_Screen1Weekday = NULL;   // weekday text (Req 2.1)
+static lv_obj_t *ui_Screen1Tz = NULL;        // time-zone abbreviation (Req 2.2)
 
 static lv_obj_t *ui_Screen2 = NULL;
 static lv_obj_t *ui_Screen2Day = NULL;
 static lv_obj_t *ui_Screen2Month = NULL;
 static lv_obj_t *ui_Screen2Year = NULL;
+static lv_obj_t *ui_Screen2Weekday = NULL;   // weekday text (Req 2.1)
+static lv_obj_t *ui_Screen2Tz = NULL;        // time-zone abbreviation (Req 2.2)
 static lv_obj_t *ui_Screen2_Hour = NULL;
 static lv_obj_t *ui_Screen2_Minute = NULL;
 static lv_obj_t *ui_Screen2_Seconds = NULL;
@@ -145,6 +149,28 @@ static void clock_gui_text_init(lv_obj_t * obj, int x, int width, int max_length
     lv_obj_set_style_bg_opa(obj, 192, LV_PART_MAIN| LV_STATE_DEFAULT);
 }
 
+/* Create a centered weekday label on the given screen (Req 2.1). The y offset
+ * is relative to the top of the screen. A semi-transparent white box keeps it
+ * readable over both the analog clock face and the digital gradient. */
+static lv_obj_t * clock_gui_weekday_init(lv_obj_t * parent, int y)
+{
+    lv_obj_t * lbl = lv_label_create(parent);
+    lv_obj_set_width(lbl, LV_SIZE_CONTENT);
+    lv_obj_set_height(lbl, LV_SIZE_CONTENT);
+    lv_obj_set_align(lbl, LV_ALIGN_TOP_MID);
+    lv_obj_set_y(lbl, y);
+    lv_label_set_long_mode(lbl, LV_LABEL_LONG_MODE_CLIP);
+    lv_label_set_text(lbl, "---");
+    lv_obj_set_style_text_font(lbl, &lv_font_montserrat_18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(lbl, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_align(lbl, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(lbl, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(lbl, 192, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_all(lbl, 3, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_radius(lbl, 4, LV_PART_MAIN | LV_STATE_DEFAULT);
+    return lbl;
+}
+
 static void clock_gui_Screen1_init(void)
 {
     ui_Screen1 = lv_obj_create(NULL);
@@ -180,6 +206,13 @@ static void clock_gui_Screen1_init(void)
     lv_style_set_line_color(&line_s_style, lv_palette_main(LV_PALETTE_BLUE_GREY));
     lv_style_set_line_width(&line_s_style, 4);
     lv_obj_add_style(line_sec, &line_s_style, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    /* Weekday in the upper half of the analog display (Req 2.1). Created last
+     * so it stays on top of the clock hands. */
+    ui_Screen1Weekday = clock_gui_weekday_init(ui_Screen1, 48);
+
+    /* Time-zone abbreviation in the lower part of the analog display (Req 2.2). */
+    ui_Screen1Tz = clock_gui_weekday_init(ui_Screen1, 188);
 }
 
 static void clock_gui_Screen2_init(void)
@@ -266,6 +299,12 @@ static void clock_gui_Screen2_init(void)
     lv_obj_set_style_text_font(ui_Screen2_Seconds, &lv_font_montserrat_28, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_color(ui_Screen2_Seconds, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_Screen2_Seconds, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    /* Weekday below the date on the digital display (Req 2.1). */
+    ui_Screen2Weekday = clock_gui_weekday_init(ui_Screen2, 180);
+
+    /* Time-zone abbreviation at the top of the digital display (Req 2.2). */
+    ui_Screen2Tz = clock_gui_weekday_init(ui_Screen2, 20);
 }
 
 
@@ -353,6 +392,9 @@ void clock_gui_update(uint64_t tick_us)
     int day, month, year;
     clock_time_get_local_date(&hours, &minutes, &seconds, &day, &month, &year);
 
+    int weekday;
+    clock_time_get_weekday(&weekday);
+
     // First update the cursor
     pos_t pos;
     bool visible;
@@ -392,6 +434,19 @@ void clock_gui_update(uint64_t tick_us)
     string_len = snprintf(string, sizeof(string), "%4d", year);
     lv_textarea_set_text(ui_Screen1Year, string);
     lv_textarea_set_text(ui_Screen2Year, string);
+
+    /* Weekday on both screens (Req 2.1). DCF77: 1 = Monday ... 7 = Sunday. */
+    static const char * weekday_strs[] = {
+        "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"
+    };
+    const char * wd = (weekday >= 1 && weekday <= 7) ? weekday_strs[weekday - 1] : "---";
+    lv_label_set_text(ui_Screen1Weekday, wd);
+    lv_label_set_text(ui_Screen2Weekday, wd);
+
+    /* Time-zone abbreviation on both screens (Req 2.2): WET / WEST / EST. */
+    const char * tz = clock_time_get_tz_name();
+    lv_label_set_text(ui_Screen1Tz, tz);
+    lv_label_set_text(ui_Screen2Tz, tz);
 
     // Now draw the hands of the clock -- but only on Screen1
     if (screen_active == ui_Screen1)

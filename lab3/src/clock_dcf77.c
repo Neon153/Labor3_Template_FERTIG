@@ -267,6 +267,7 @@ static inline void dcf77_feed_event(DCF77_Bitarray *bitarray, clock_dcf77_event_
             {
                 clock_time_set_from_dcf77(t.hour, t.minute, t.day, t.month, t.year);
                 clock_time_set_weekday(t.weekday);
+                clock_time_set_dst(t.dst);
                 dcf77_minute_received = true;
                 dcf77_set_rgb(false, false, false);   // valid -> RED off (Req 1.2/1.3)
             }

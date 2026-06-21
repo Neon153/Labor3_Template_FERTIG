@@ -16,6 +16,7 @@
 #include <stdio.h>
 #include <hardware/gpio.h>
 #include <hardware/adc.h>
+#include <pico/time.h>
 
 #include "FreeRTOS.h"
 #include "semphr.h"
@@ -170,4 +171,25 @@ void clock_cursor_get_state(pos_t *pos, bool *visible)
     pos->y = cursor_pos.y;
     *visible = cursor_visible;
     UNLOCK;
+}
+
+bool clock_cursor_button_pressed(void)
+{
+    /* The joystick button has a pull-up and shorts to GND when pressed, so a
+     * LOW level means "pressed". We report a single edge per press and debounce
+     * with the same press-time threshold the cursor uses. */
+    static bool last_pressed = false;
+    static uint64_t last_edge_us = 0;
+
+    bool pressed = (gpio_get(JOYSTICK_GPIO_BUTTON) == 0);
+    uint64_t now = time_us_64();
+    bool edge = false;
+
+    if (pressed && !last_pressed && (now - last_edge_us) > CURSOR_BUTTON_PRESS_TIME_US)
+    {
+        edge = true;
+        last_edge_us = now;
+    }
+    last_pressed = pressed;
+    return edge;
 }

@@ -30,6 +30,10 @@ static int weekday = 1; // 1 = Monday ... 7 = Sunday
 static int timezone_offset_hours = CLOCK_TIME_START_OFFSET_HOUR;
 static uint64_t last_tick_us = 0;
 
+/* Display time-zone toggle (Req 2.2). */
+static bool tz_us_eastern = false;   // false = MEZ/DCF77 time, true = US Eastern
+static bool is_summer     = false;   // DST flag from DCF77 (true = MESZ/summer)
+
 static timezone_def_t timezone_def[] = {
     {"UTC",   "Coordinated Universal Time", 0},
     {"WET",   "Western European Time", 0},
@@ -106,7 +110,7 @@ void clock_time_get_local(int * hour, int * minute, int * second) {
     assert (second != NULL);
 
     LOCK;
-    *hour = (hours + timezone_offset_hours) % 24;
+    *hour = (((hours + timezone_offset_hours) % 24) + 24) % 24;
     *minute = minutes;
     *second = seconds;
     UNLOCK;
@@ -121,7 +125,7 @@ void clock_time_get_local_date(int * hour, int * minute, int * second, int * day
     assert (year != NULL);
 
     LOCK;
-    *hour = (hours + timezone_offset_hours) % 24;
+    *hour = (((hours + timezone_offset_hours) % 24) + 24) % 24;
     *minute = minutes;
     *second = seconds;
     *day = days;
@@ -196,6 +200,34 @@ void clock_time_set_timezone(timezones_t tz) {
     LOCK;
     timezone_offset_hours = timezone_def[tz].hour_offset_UTC;
     UNLOCK;
+}
+
+void clock_time_set_dst(bool summer) {
+    LOCK;
+    is_summer = summer;
+    UNLOCK;
+}
+
+void clock_time_toggle_timezone(void) {
+    LOCK;
+    tz_us_eastern = !tz_us_eastern;
+    /* European display = DCF77 time (offset 0); US Eastern = DCF77 time - 5 h.
+     * The summer/winter difference only changes the LABEL, not the European
+     * offset, because DCF77 already transmits MEZ/MESZ. */
+    timezone_offset_hours = tz_us_eastern ? timezone_def[TIMEZONE_EST].hour_offset_UTC
+                                          : timezone_def[TIMEZONE_WET].hour_offset_UTC;
+    UNLOCK;
+}
+
+const char * clock_time_get_tz_name(void) {
+    const char * name;
+    LOCK;
+    if (tz_us_eastern)
+        name = "EST";
+    else
+        name = is_summer ? "WEST" : "WET";
+    UNLOCK;
+    return name;
 }
 
 
